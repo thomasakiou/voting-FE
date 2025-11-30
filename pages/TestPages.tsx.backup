@@ -1,0 +1,724 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { useAuth } from '../auth-context';
+import api from '../api';
+import type { ExamTypeResponse, SubjectResponse, TestResponse } from '../api-types';
+
+// --- Test Selection ---
+
+export const TestSelection: React.FC = () => {
+  const navigate = useNavigate();
+  const [examTypes, setExamTypes] = useState<ExamTypeResponse[]>([]);
+  const [subjects, setSubjects] = useState<SubjectResponse[]>([]);
+  const [tests, setTests] = useState<TestResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedExamType, setSelectedExamType] = useState<number | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [examTypesData, subjectsData, testsData] = await Promise.all([
+          api.getExamTypes(),
+          api.getSubjects(),
+          api.getTests(),
+        ]);
+        setExamTypes(examTypesData);
+        setSubjects(subjectsData);
+        setTests(testsData);
+        if (examTypesData.length > 0) {
+          setSelectedExamType(examTypesData[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch test data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    const fetchFilteredTests = async () => {
+      if (selectedExamType === null && selectedSubject === null) return;
+
+      try {
+        let filteredTests: TestResponse[];
+        if (selectedExamType && selectedSubject) {
+          // Fetch all tests and filter client-side (API doesn't have combined filter)
+          const allTests = await api.getTests();
+          filteredTests = allTests.filter(
+            t => t.exam_type_id === selectedExamType && t.subject_id === selectedSubject
+          );
+        } else if (selectedExamType) {
+          filteredTests = await api.getTestsByExamType(selectedExamType);
+        } else if (selectedSubject) {
+          filteredTests = await api.getTestsBySubject(selectedSubject);
+        } else {
+          filteredTests = await api.getTests();
+        }
+        setTests(filteredTests);
+      } catch (error) {
+        console.error('Failed to fetch filtered tests:', error);
+      }
+    };
+
+    fetchFilteredTests();
+  }, [selectedExamType, selectedSubject]);
+
+  const handleReset = async () => {
+    setSelectedExamType(examTypes.length > 0 ? examTypes[0].id : null);
+    setSelectedSubject(null);
+    try {
+      const allTests = await api.getTests();
+      setTests(allTests);
+    } catch (error) {
+      console.error('Failed to reset tests:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-4xl font-black text-navy">Practice Tests</h1>
+        <p className="text-slate-500 mt-2">Choose an exam to begin your preparation.</p>
+      </div>
+
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+        <div>
+          <label className="block text-sm font-bold text-navy mb-2">Exam Type</label>
+          <div className="flex flex-wrap p-1 bg-slate-100 rounded-lg w-fit gap-1">
+            {examTypes.map((type) => (
+              <button
+                key={type.id}
+                onClick={() => setSelectedExamType(type.id)}
+                className={`px-6 py-2 rounded-md text-sm font-bold transition ${selectedExamType === type.id
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+                  }`}
+              >
+                {type.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+            <select
+              className="w-full h-11 px-3 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-primary/20 outline-none"
+              value={selectedSubject || ''}
+              onChange={(e) => setSelectedSubject(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">All Subjects</option>
+              {subjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2 flex justify-end">
+            <button
+              onClick={handleReset}
+              className="h-11 px-4 bg-slate-100 text-slate-700 font-bold rounded-lg text-sm hover:bg-slate-200 transition"
+            >
+              Reset Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {tests.length > 0 ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tests.map((test) => (
+            <div
+              key={test.id}
+              className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md transition flex flex-col justify-between h-full"
+            >
+              <div>
+                <h3 className="font-bold text-lg text-navy mb-3">{test.title}</h3>
+                <div className="space-y-2 mb-6">
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <span className="material-symbols-outlined text-accent text-lg">timer</span>
+                    <span>Duration: {test.duration_minutes} mins</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <span className="material-symbols-outlined text-accent text-lg">quiz</span>
+                    <span>Questions: {test.question_count}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <span className="material-symbols-outlined text-accent text-lg">grade</span>
+                    <span>Passing: {test.passing_marks}/{test.total_marks}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate(`/student/test/${test.id}`)}
+                className="w-full py-3 bg-secondary text-white font-bold rounded-lg hover:bg-green-600 transition shadow-sm shadow-green-500/20"
+                disabled={!test.is_active}
+              >
+                {test.is_active ? 'Start Test' : 'Inactive'}
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 text-slate-400">
+          <span className="material-symbols-outlined text-6xl mb-4 opacity-50">quiz</span>
+          <p className="text-lg font-medium">No tests available with current filters</p>
+          <button
+            onClick={handleReset}
+            className="mt-4 text-primary font-bold hover:underline"
+          >
+            Reset filters
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+// --- Live Test Interface ---
+
+export const TestInterface: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+
+  const [test, setTest] = useState<any>(null);
+  const [attempt, setAttempt] = useState<any>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [flagged, setFlagged] = useState<Set<number>>(new Set());
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const startTest = async () => {
+      if (!id || !user) return;
+
+      try {
+        // Fetch test with questions
+        const testData = await api.getTestWithQuestions(Number(id));
+        setTest(testData);
+        setQuestions(testData.questions);
+
+        // Start attempt
+        const attemptData = await api.startAttempt({ test_id: Number(id) }, user.id);
+        setAttempt(attemptData);
+
+        // Set timer (duration in minutes * 60 seconds)
+        setTimeRemaining(testData.duration_minutes * 60);
+      } catch (error) {
+        console.error('Failed to start test:', error);
+        alert('Failed to start test. Please try again.');
+        navigate('/student/tests');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    startTest();
+  }, [id, user, navigate]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (timeRemaining <= 0 || !attempt) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          handleSubmit(); // Auto-submit when time runs out
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining, attempt]);
+
+  const handleAnswerSelect = (questionId: number, answer: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+  };
+
+  const toggleFlag = (questionId: number) => {
+    setFlagged((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId);
+      } else {
+        newSet.add(questionId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!attempt || submitting) return;
+
+    const confirmSubmit = window.confirm(
+      `You have answered ${Object.keys(answers).length} out of ${questions.length} questions. Are you sure you want to submit?`
+    );
+
+    if (!confirmSubmit) return;
+
+    setSubmitting(true);
+
+    try {
+      const answerSubmissions = questions.map((q) => ({
+        question_id: q.id,
+        answer_text: answers[q.id] || '',
+        time_spent: null,
+      }));
+
+      const result = await api.submitAttempt({
+        attempt_id: attempt.id,
+        answers: answerSubmissions,
+      });
+
+      // Navigate to results page
+      navigate(`/student/result/${attempt.id}`);
+    } catch (error) {
+      console.error('Failed to submit test:', error);
+      alert('Failed to submit test. Please try again.');
+      setSubmitting(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return { hours: String(hours).padStart(2, '0'), minutes: String(minutes).padStart(2, '0'), seconds: String(secs).padStart(2, '0') };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+          <p className="text-slate-600">Loading test...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!test || questions.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-red-600 font-bold">Failed to load test</p>
+        <button onClick={() => navigate('/student/tests')} className="mt-4 text-primary hover:underline">
+          Back to tests
+        </button>
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const time = formatTime(timeRemaining);
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm font-medium text-slate-500">
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </span>
+              {flagged.has(currentQuestion.id) && (
+                <span className="text-xs font-bold text-accent bg-yellow-100 px-2 py-1 rounded">FLAGGED</span>
+              )}
+            </div>
+            <p className="text-lg text-slate-900 leading-relaxed font-medium">
+              {currentQuestion.question_text}
+            </p>
+            {currentQuestion.question_image && (
+              <img
+                src={currentQuestion.question_image}
+                alt="Question"
+                className="mt-4 max-w-full rounded-lg border border-slate-200"
+              />
+            )}
+          </div>
+
+          <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="font-bold text-slate-900 mb-2">Choose one option:</h3>
+            {currentQuestion.options && typeof currentQuestion.options === 'object' ? (
+              Object.entries(currentQuestion.options).map(([key, value]: [string, any], i) => (
+                <label
+                  key={key}
+                  className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition ${answers[currentQuestion.id] === key
+                    ? 'border-secondary bg-secondary/10'
+                    : 'border-slate-200 hover:border-primary bg-slate-50'
+                    }`}
+                >
+                  <div
+                    className={`size-8 rounded-full border-2 flex items-center justify-center font-bold text-sm ${answers[currentQuestion.id] === key
+                      ? 'border-secondary bg-secondary/10 text-secondary'
+                      : 'border-slate-300 text-slate-500'
+                      }`}
+                  >
+                    {key}
+                  </div>
+                  <span className="text-slate-700 font-medium flex-1">{value}</span>
+                  <input
+                    type="radio"
+                    name={`q${currentQuestion.id}`}
+                    className="hidden"
+                    checked={answers[currentQuestion.id] === key}
+                    onChange={() => handleAnswerSelect(currentQuestion.id, key)}
+                  />
+                </label>
+              ))
+            ) : (
+              <p className="text-slate-500">No options available</p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <button
+              onClick={() => toggleFlag(currentQuestion.id)}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition ${flagged.has(currentQuestion.id)
+                ? 'bg-yellow-100 text-accent'
+                : 'text-accent hover:bg-yellow-50'
+                }`}
+            >
+              <span className="material-symbols-outlined">flag</span>
+              {flagged.has(currentQuestion.id) ? 'Unflag' : 'Flag for Review'}
+            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
+                disabled={currentQuestionIndex === 0}
+                className="px-6 py-3 bg-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-300 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined">arrow_back</span> Previous
+              </button>
+              <button
+                onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+                disabled={currentQuestionIndex === questions.length - 1}
+                className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className={`bg-white p-6 rounded-xl border-2 shadow-sm text-center ${timeRemaining < 300 ? 'border-red-300 bg-red-50' : 'border-slate-200'
+            }`}>
+            <h3 className="font-bold text-slate-900 mb-4">Time Remaining</h3>
+            <div className="flex justify-center gap-3">
+              {[
+                { v: time.hours, l: 'Hours' },
+                { v: time.minutes, l: 'Minutes' },
+                { v: time.seconds, l: 'Seconds' },
+              ].map((t, i) => (
+                <div key={i} className="flex flex-col gap-1">
+                  <div className={`size-16 rounded-lg flex items-center justify-center text-3xl font-black ${timeRemaining < 300 ? 'bg-red-500 text-white' : 'bg-accent text-navy'
+                    }`}>
+                    {t.v}
+                  </div>
+                  <span className="text-xs text-slate-500">{t.l}</span>
+                </div>
+              ))}
+            </div>
+            {timeRemaining < 300 && (
+              <p className="text-red-600 text-sm font-bold mt-4">⚠️ Less than 5 minutes remaining!</p>
+            )}
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold text-slate-900 mb-4">Question Navigator</h3>
+            <div className="grid grid-cols-6 gap-2 mb-4">
+              {questions.map((q, i) => (
+                <button
+                  key={q.id}
+                  onClick={() => setCurrentQuestionIndex(i)}
+                  className={`size-9 rounded font-bold text-sm flex items-center justify-center transition ${i === currentQuestionIndex
+                    ? 'ring-2 ring-primary text-primary bg-primary/10'
+                    : answers[q.id]
+                      ? 'bg-green-100 text-green-700'
+                      : flagged.has(q.id)
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <div className="text-xs text-slate-600 space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="size-4 bg-green-100 rounded"></div>
+                <span>Answered ({Object.keys(answers).length})</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="size-4 bg-yellow-100 rounded"></div>
+                <span>Flagged ({flagged.size})</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="size-4 bg-slate-100 rounded"></div>
+                <span>Not Answered ({questions.length - Object.keys(answers).length})</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="w-full py-4 bg-secondary text-white font-bold text-lg rounded-xl hover:bg-green-600 transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined">check_circle</span>
+
+// --- Test Results ---
+
+export const TestResults: React.FC = () => {
+  const {id} = useParams<{ id: string }>();
+            const navigate = useNavigate();
+            const [result, setResult] = useState<any>(null);
+              const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!id) return;
+
+              try {
+        const resultData = await api.getAttemptResult(Number(id));
+              setResult(resultData);
+      } catch (error) {
+                console.error('Failed to fetch results:', error);
+      } finally {
+                setLoading(false);
+      }
+    };
+
+              fetchResults();
+  }, [id]);
+
+              if (loading) {
+    return (
+              <div className="flex justify-center items-center min-h-[400px]">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+              );
+  }
+
+              if (!result) {
+    return (
+              <div className="text-center py-16">
+                <p className="text-red-600 font-bold">Failed to load results</p>
+                <button onClick={() => navigate('/student/dashboard')} className="mt-4 text-primary hover:underline">
+                  Back to dashboard
+                </button>
+              </div>
+              );
+  }
+
+              const percentage = Math.round(result.percentage);
+              const correctCount = result.correct_count;
+              const wrongCount = result.total_questions - correctCount;
+              const passed = result.passed;
+
+              return (
+              <div className="max-w-5xl mx-auto space-y-8">
+                <div className="flex flex-wrap justify-between items-center gap-4">
+                  <div>
+                    <h1 className="text-3xl font-black text-navy">{result.test_title}</h1>
+                    <p className="text-slate-500">Here is a summary of your test results.</p>
+                  </div>
+                  <div className={`px-4 py-2 rounded-full font-bold flex items-center gap-2 ${passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                    <span className="material-symbols-outlined">{passed ? 'verified' : 'cancel'}</span>
+                    {passed ? 'PASS' : 'FAIL'}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="bg-white p-6 rounded-xl border border-slate-200">
+                    <p className="text-slate-600 font-medium">Score %</p>
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <h2 className="text-4xl font-bold text-navy">{percentage}%</h2>
+                    </div>
+                    <div className="h-40 flex justify-center relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[{ value: percentage }, { value: 100 - percentage }]}
+                            innerRadius={60}
+                            outerRadius={80}
+                            startAngle={90}
+                            endAngle={-270}
+                            dataKey="value"
+                          >
+                            <Cell fill={passed ? "#2ECC71" : "#EF4444"} />
+                            <Cell fill="#E2E8F0" />
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className={`absolute inset-0 flex items-center justify-center font-bold text-2xl ${passed ? 'text-secondary' : 'text-red-600'
+                        }`}>
+                        {percentage}%
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl border border-slate-200">
+                    <p className="text-slate-600 font-medium">Correct vs Wrong</p>
+                    <h2 className="text-4xl font-bold text-navy mb-1">{correctCount} Correct</h2>
+                    <p className="text-slate-400 text-sm mb-6">Out of {result.total_questions}</p>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm font-bold text-green-600 mb-1">
+                          <span>Correct</span>
+                          <span>{correctCount}</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-secondary"
+                            style={{ width: `${(correctCount / result.total_questions) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm font-bold text-red-500 mb-1">
+                          <span>Wrong</span>
+                          <span>{wrongCount}</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-red-500"
+                            style={{ width: `${(wrongCount / result.total_questions) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl border border-slate-200">
+                    <p className="text-slate-600 font-medium">Score</p>
+                    <h2 className="text-4xl font-bold text-navy mb-1">
+                      {result.score}/{result.total_marks}
+                    </h2>
+                    <p className="text-slate-400 text-sm mb-4">
+                      Passing: {result.passing_marks}/{result.total_marks}
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Your Score</span>
+                        <span className="font-bold text-navy">{result.score}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Passing Score</span>
+                        <span className="font-bold text-slate-600">{result.passing_marks}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Total Marks</span>
+                        <span className="font-bold text-slate-600">{result.total_marks}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {result.answers && result.answers.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-2xl font-bold text-navy">Per-Question Breakdown</h2>
+                      <button
+                        onClick={() => navigate('/student/tests')}
+                        className="px-4 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition"
+                      >
+                        Take Another Test
+                      </button>
+                    </div>
+
+                    {result.answers.map((answer: any, index: number) => {
+                      const isCorrect = answer.is_correct;
+                      return (
+                        <div key={index} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                          <div className={`p-4 border-b border-slate-200 flex items-center gap-3 ${isCorrect ? 'bg-green-50' : 'bg-red-50'
+                            }`}>
+                            <div className={`size-8 rounded-lg flex items-center justify-center ${isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                              }`}>
+                              <span className="material-symbols-outlined">
+                                {isCorrect ? 'check' : 'close'}
+                              </span>
+                            </div>
+                            <span className="font-bold text-slate-800">
+                              Question {index + 1}: {answer.question_text}
+                            </span>
+                          </div>
+                          <div className="p-6">
+                            {!isCorrect && (
+                              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                <div className="p-4 bg-red-50 rounded-lg border border-red-100">
+                                  <span className="text-xs font-bold text-red-600 uppercase">Your Answer</span>
+                                  <p className="font-medium text-slate-800 mt-1">{answer.user_answer || 'Not answered'}</p>
+                                </div>
+                                <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                                  <span className="text-xs font-bold text-green-600 uppercase">Correct Answer</span>
+                                  <p className="font-medium text-slate-800 mt-1">{answer.correct_answer}</p>
+                                </div>
+                              </div>
+                            )}
+                            {isCorrect && (
+                              <div className="p-4 bg-green-50 rounded-lg border border-green-100 mb-4">
+                                <span className="text-xs font-bold text-green-600 uppercase">Your Answer</span>
+                                <p className="font-medium text-slate-800 mt-1">{answer.user_answer}</p>
+                              </div>
+                            )}
+                            {answer.explanation && (
+                              <div className="text-sm text-slate-600">
+                                <span className="font-bold block mb-1">Explanation:</span>
+                                <p>{answer.explanation}</p>
+                                {answer.explanation_image && (
+                                  <img
+                                    src={answer.explanation_image}
+                                    alt="Explanation"
+                                    className="mt-3 max-w-full rounded-lg border border-slate-200"
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="flex justify-center gap-4 pt-8">
+                  <button
+                    onClick={() => navigate('/student/dashboard')}
+                    className="px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition"
+                  >
+                    Back to Dashboard
+                  </button>
+                  <button
+                    onClick={() => navigate('/student/tests')}
+                    className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition"
+                  >
+                    Take Another Test
+                  </button>
+                </div>
+              </div>
+              );
+};
