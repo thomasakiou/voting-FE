@@ -33,6 +33,7 @@ export interface UserUpdate {
   full_name?: string | null;
   role?: string | null;
   is_active?: boolean | null;
+  password?: string | null;
 }
 
 export interface LoginResponse {

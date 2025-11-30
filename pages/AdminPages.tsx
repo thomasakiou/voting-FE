@@ -4,6 +4,7 @@ import api from '../lib/api';
 // --- Admin Dashboard (Analytics) ---
 
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth-context';
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -199,7 +200,7 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-xs text-slate-500">Update announcements</p>
             </button>
             <button
-              onClick={() => alert('Settings page coming soon!')}
+              onClick={() => navigate('/admin/settings')}
               className="p-4 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition text-left"
             >
               <span className="material-symbols-outlined text-primary mb-2">settings</span>
@@ -1734,6 +1735,154 @@ export const AdminExams: React.FC = () => {
                 </button>
                 <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-primary/90">
                   {editingSubject ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Admin Settings ---
+
+export const AdminSettings: React.FC = () => {
+  const { user } = useAuth();
+  const [showPasswordModal, setShowPasswordModal] = React.useState(false);
+  const [passwordForm, setPasswordForm] = React.useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [loading, setLoading] = React.useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('New passwords do not match!');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      alert('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (user?.id) {
+        await api.updateUser(user.id, { password: passwordForm.newPassword });
+        alert('Password updated successfully!');
+        setShowPasswordModal(false);
+        setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      }
+    } catch (error: any) {
+      console.error('Failed to update password:', error);
+      alert(error.response?.data?.detail || 'Failed to update password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-4xl font-black text-navy">Settings</h1>
+        <p className="text-slate-500 mt-2">Manage your account and system preferences.</p>
+      </div>
+
+      <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm max-w-2xl">
+        <div className="flex items-center gap-6 mb-8">
+          <div className="size-20 bg-slate-200 rounded-full flex items-center justify-center text-3xl font-bold text-slate-500">
+            {user?.full_name?.charAt(0) || 'A'}
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-navy">{user?.full_name || 'Admin User'}</h2>
+            <p className="text-slate-500">{user?.email || 'admin@example.com'}</p>
+            <span className="inline-block mt-2 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase">
+              {user?.role || 'Administrator'}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="border-t border-slate-100 pt-6">
+            <h3 className="text-lg font-bold text-navy mb-4">Security</h3>
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              className="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined">lock</span>
+              Change Password
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="font-bold text-lg text-navy">Change Password</h3>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-navy mb-1">Current Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.oldPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-navy mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="Enter new password"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-navy mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="Confirm new password"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Saving...' : 'Update Password'}
                 </button>
               </div>
             </form>

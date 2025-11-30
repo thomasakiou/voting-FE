@@ -12,7 +12,7 @@ import { ExamsPage } from './pages/ExamsPage';
 import { VideoPage } from './pages/VideoPage';
 import { Dashboard, Classroom, SubjectDetail, Forum, Profile } from './pages/StudentPages';
 import { TestSelection, TestInterface, TestResults, PracticeTestInterface, PracticeTestResult } from './pages/TestPages';
-import { AdminDashboard, AdminQuestions, AdminNews, AdminUsers, AdminExams, AdminPublicQuestions } from './pages/AdminPages';
+import { AdminDashboard, AdminQuestions, AdminNews, AdminUsers, AdminExams, AdminPublicQuestions, AdminSettings } from './pages/AdminPages';
 
 const App: React.FC = () => {
   console.log('API_BASE_URL:', import.meta.env.VITE_API_BASE_URL || '/api');
@@ -91,6 +91,7 @@ const App: React.FC = () => {
               <Route path="exams" element={<AdminExams />} />
               <Route path="questions" element={<AdminQuestions />} />
               <Route path="news" element={<AdminNews />} />
+              <Route path="settings" element={<AdminSettings />} />
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>
 
