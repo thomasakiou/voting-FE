@@ -16,22 +16,49 @@ const Logo = () => (
 // --- Public Layout (Home, Contact, Legal) ---
 
 export const PublicLayout: React.FC = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/"><Logo /></Link>
+
+          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm font-medium hover:text-primary transition">Features</a>
             <a href="#exams" className="text-sm font-medium hover:text-primary transition">Exams</a>
             <a href="#news" className="text-sm font-medium hover:text-primary transition">News</a>
             <Link to="/contact" className="text-sm font-medium hover:text-primary transition">Contact</Link>
           </nav>
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="hidden sm:flex h-10 px-4 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold hover:bg-slate-200 transition">Log In</Link>
+
+          <div className="hidden md:flex items-center gap-3">
+            <Link to="/login" className="h-10 px-4 flex items-center justify-center rounded-lg bg-slate-100 text-sm font-bold hover:bg-slate-200 transition">Log In</Link>
             <Link to="/signup" className="h-10 px-4 flex items-center justify-center rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary/90 transition shadow-sm shadow-primary/20">Sign Up</Link>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2 text-slate-600"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
+          </button>
         </div>
+
+        {/* Mobile Nav */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-slate-100 p-4 shadow-lg absolute w-full left-0 top-16 flex flex-col gap-4">
+            <a href="#features" className="text-sm font-medium hover:text-primary transition px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
+            <a href="#exams" className="text-sm font-medium hover:text-primary transition px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Exams</a>
+            <a href="#news" className="text-sm font-medium hover:text-primary transition px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>News</a>
+            <Link to="/contact" className="text-sm font-medium hover:text-primary transition px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+            <div className="border-t border-slate-100 pt-4 flex flex-col gap-3">
+              <Link to="/login" className="h-10 px-4 flex items-center justify-center rounded-lg bg-slate-100 text-sm font-bold hover:bg-slate-200 transition" onClick={() => setIsMobileMenuOpen(false)}>Log In</Link>
+              <Link to="/signup" className="h-10 px-4 flex items-center justify-center rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary/90 transition shadow-sm shadow-primary/20" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+            </div>
+          </div>
+        )}
       </header>
       <main className="flex-grow">
         <Outlet />
@@ -54,6 +81,7 @@ export const PublicLayout: React.FC = () => {
 export const StudentLayout: React.FC = () => {
   const location = useLocation();
   const { logout, user } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   // Helper function to capitalize first letter of each word
@@ -75,30 +103,45 @@ export const StudentLayout: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-background-light">
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 flex-col bg-white border-r border-slate-200 z-30">
-        <div className="p-4 border-b border-slate-200">
-          <Link to="/student/dashboard">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:transform-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+          <Link to="/student/dashboard" onClick={() => setIsSidebarOpen(false)}>
             <Logo />
           </Link>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden text-slate-500 hover:text-slate-700"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          <Link to="/student/dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/dashboard') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
+          <Link to="/student/dashboard" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/dashboard') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
             <span className="material-symbols-outlined">dashboard</span>
             Dashboard
           </Link>
-          <Link to="/student/tests" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/tests') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
+          <Link to="/student/tests" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/tests') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
             <span className="material-symbols-outlined">quiz</span>
             Tests
           </Link>
-          <Link to="/student/classroom" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/classroom') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
+          <Link to="/student/classroom" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/classroom') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
             <span className="material-symbols-outlined">school</span>
             Classroom
           </Link>
-          <Link to="/student/forum" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/forum') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
+          <Link to="/student/forum" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/forum') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
             <span className="material-symbols-outlined">forum</span>
             Forum
           </Link>
-          <Link to="/student/profile" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/profile') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
+          <Link to="/student/profile" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive('/student/profile') ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
             <span className="material-symbols-outlined">person</span>
             Profile
           </Link>
@@ -111,10 +154,18 @@ export const StudentLayout: React.FC = () => {
         </div>
       </aside>
 
-      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-20">
-          <div className="text-lg font-bold text-slate-900">
-            {location.pathname === '/student/dashboard' ? `Hello, ${getUserName()}!` : 'MyExamPadi'}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden text-slate-500 hover:text-slate-700"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+            <div className="text-lg font-bold text-slate-900 truncate max-w-[200px] sm:max-w-none">
+              {location.pathname === '/student/dashboard' ? `Hello, ${getUserName()}!` : 'MyExamPadi'}
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden md:flex relative">
@@ -124,7 +175,7 @@ export const StudentLayout: React.FC = () => {
             <button className="size-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-600">
               <span className="material-symbols-outlined">notifications</span>
             </button>
-            <Link to="/student/profile" className="size-10 rounded-full bg-slate-200 overflow-hidden border border-slate-200">
+            <Link to="/student/profile" className="size-10 rounded-full bg-slate-200 overflow-hidden border border-slate-200 flex-shrink-0">
               <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKOcH2LFiD23TNdzW957OZrXJD8A6ahZHHHk5CoKOPCojRyLnGmcCUJY8h_GrVudc4jXvzfUOROWDJfMG1end3dfi6oTZWuLW9dWI86If5YifHkYwvXLwZkbFmFauL8SoMcRiAEqwbC05ulzw2jKooVdaFg5D-1mqHI8bYjqrxFqP9Cw3AM0DpbsvzbWWtOIbY3xIWA6wssgC9Ag7IetSROXB0ayrzqFOEdmGQKkaLg8O6dgZC5M9mURN8itRJmEQTiTKESp6QA-E" alt="Profile" className="w-full h-full object-cover" />
             </Link>
           </div>
@@ -142,19 +193,37 @@ export const StudentLayout: React.FC = () => {
 export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const { logout } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   return (
     <div className="flex min-h-screen bg-background-light font-admin">
-      <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 z-30 bg-white border-r border-slate-200">
-        <div className="p-6 flex items-center gap-3">
-          <div className="size-10 bg-center bg-cover rounded-full" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD_XtguEdkrvZrGIaz-F6GMEd0KEOpiw41wXg6gN_Llp7a3EzV3hSnNizTaHhN43p2qarY798z6SQYjYnTjPS44qOsMDXhlWSZtuCZf5ZRd02MHJdb--S1eoiNDybXYOTRbOXlGeB9R0M0amgvOg4LUrET35UVvJpVVXRb1sUKx9CTJHOg2aYKE5tCx6M906qr9-fsV7xjCaOSiGQybnsZ3-6T3KQVQU3xSSf8omnS5l7Ww7-2Ylf7BauXD7GeD-yjdt98CMIfGZno")' }}></div>
-          <div>
-            <h1 className="text-sm font-bold text-slate-900">Admin Name</h1>
-            <p className="text-xs text-slate-500">Administrator</p>
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 flex-col bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:transform-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="size-10 bg-center bg-cover rounded-full" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD_XtguEdkrvZrGIaz-F6GMEd0KEOpiw41wXg6gN_Llp7a3EzV3hSnNizTaHhN43p2qarY798z6SQYjYnTjPS44qOsMDXhlWSZtuCZf5ZRd02MHJdb--S1eoiNDybXYOTRbOXlGeB9R0M0amgvOg4LUrET35UVvJpVVXRb1sUKx9CTJHOg2aYKE5tCx6M906qr9-fsV7xjCaOSiGQybnsZ3-6T3KQVQU3xSSf8omnS5l7Ww7-2Ylf7BauXD7GeD-yjdt98CMIfGZno")' }}></div>
+            <div>
+              <h1 className="text-sm font-bold text-slate-900">Admin Name</h1>
+              <p className="text-xs text-slate-500">Administrator</p>
+            </div>
           </div>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden text-slate-500 hover:text-slate-700"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
-        <nav className="flex-1 px-4 space-y-2 mt-4">
+        <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
           {[
             { path: '/admin/dashboard', icon: 'dashboard', label: 'Dashboard' },
             { path: '/admin/users', icon: 'group', label: 'Users' },
@@ -163,14 +232,19 @@ export const AdminLayout: React.FC = () => {
             { path: '/admin/questions', icon: 'help_center', label: 'Questions' },
             { path: '/admin/news', icon: 'newspaper', label: 'News' },
           ].map((item) => (
-            <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive(item.path) ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setIsSidebarOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive(item.path) ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
               <span className={`material-symbols-outlined ${isActive(item.path) ? 'fill' : ''}`}>{item.icon}</span>
               {item.label}
             </Link>
           ))}
         </nav>
         <div className="p-4 border-t border-slate-200">
-          <Link to="/admin/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 mb-1">
+          <Link to="/admin/settings" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 mb-1">
             <span className="material-symbols-outlined">settings</span>
             Settings
           </Link>
@@ -181,7 +255,20 @@ export const AdminLayout: React.FC = () => {
         </div>
       </aside>
 
-      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header */}
+        <header className="lg:hidden bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="text-slate-500 hover:text-slate-700"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+            <span className="font-bold text-slate-900">Admin Panel</span>
+          </div>
+        </header>
+
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
           <Outlet />
         </main>

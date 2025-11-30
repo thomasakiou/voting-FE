@@ -489,7 +489,7 @@ export const AdminQuestions: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <select
             className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm"
             value={filterExamType || ''}
@@ -1597,28 +1597,30 @@ export const AdminExams: React.FC = () => {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
-                <tr>
-                  <th className="px-6 py-4">Exam Name</th>
-                  <th className="px-6 py-4">Description</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {examTypes.map((e) => (
-                  <tr key={e.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 font-bold text-slate-900">{e.name}</td>
-                    <td className="px-6 py-4">{e.description}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => openEditExamModal(e)} className="text-slate-400 hover:text-slate-600 mx-1">
-                        <span className="material-symbols-outlined text-lg">edit</span>
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
+                  <tr>
+                    <th className="px-6 py-4">Name</th>
+                    <th className="px-6 py-4">Description</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {examTypes.map((exam) => (
+                    <tr key={exam.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 font-bold text-slate-900">{exam.name}</td>
+                      <td className="px-6 py-4">{exam.description || '-'}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => openEditExamModal(exam)} className="text-slate-400 hover:text-slate-600 mx-1">
+                          <span className="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
@@ -1640,28 +1642,30 @@ export const AdminExams: React.FC = () => {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
-                <tr>
-                  <th className="px-6 py-4">Subject Name</th>
-                  <th className="px-6 py-4">Description</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {subjects.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 font-bold text-slate-900">{s.name}</td>
-                    <td className="px-6 py-4">{s.description}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => openEditSubjectModal(s)} className="text-slate-400 hover:text-slate-600 mx-1">
-                        <span className="material-symbols-outlined text-lg">edit</span>
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
+                  <tr>
+                    <th className="px-6 py-4">Subject Name</th>
+                    <th className="px-6 py-4">Description</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {subjects.map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 font-bold text-slate-900">{s.name}</td>
+                      <td className="px-6 py-4">{s.description || '-'}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => openEditSubjectModal(s)} className="text-slate-400 hover:text-slate-600 mx-1">
+                          <span className="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
