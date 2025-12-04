@@ -476,9 +476,12 @@ export const PracticeTestInterface: React.FC = () => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
-    const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
-    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    // If baseUrl is set and path starts with /cbt/, remove /cbt/ to avoid duplication
+    // If baseUrl is empty (dev mode with proxy), keep the full path
+    if (baseUrl && url.startsWith('/cbt/')) {
+      return `${baseUrl}${url.substring(4)}`;
+    }
+    return baseUrl ? `${baseUrl}${url}` : url;
   };
 
   return (
@@ -716,9 +719,12 @@ export const PracticeTestResult: React.FC = () => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
-    const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
-    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    // If baseUrl is set and path starts with /cbt/, remove /cbt/ to avoid duplication
+    // If baseUrl is empty (dev mode with proxy), keep the full path
+    if (baseUrl && url.startsWith('/cbt/')) {
+      return `${baseUrl}${url.substring(4)}`;
+    }
+    return baseUrl ? `${baseUrl}${url}` : url;
   };
 
   return (
@@ -1085,9 +1091,12 @@ export const TestInterface: React.FC = () => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
-    const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
-    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    // If baseUrl is set and path starts with /cbt/, remove /cbt/ to avoid duplication
+    // If baseUrl is empty (dev mode with proxy), keep the full path
+    if (baseUrl && url.startsWith('/cbt/')) {
+      return `${baseUrl}${url.substring(4)}`;
+    }
+    return baseUrl ? `${baseUrl}${url}` : url;
   };
 
   return (
@@ -1358,9 +1367,12 @@ export const TestResults: React.FC = () => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
-    const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
-    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    // If baseUrl is set and path starts with /cbt/, remove /cbt/ to avoid duplication
+    // If baseUrl is empty (dev mode with proxy), keep the full path
+    if (baseUrl && url.startsWith('/cbt/')) {
+      return `${baseUrl}${url.substring(4)}`;
+    }
+    return baseUrl ? `${baseUrl}${url}` : url;
   };
 
   return (
