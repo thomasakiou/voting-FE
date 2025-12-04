@@ -475,7 +475,7 @@ export const PracticeTestInterface: React.FC = () => {
   const getImageUrl = (url: string) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vmi2848672.contaboserver.net/cbt';
     // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
     const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
     return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
@@ -715,7 +715,7 @@ export const PracticeTestResult: React.FC = () => {
   const getImageUrl = (url: string) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vmi2848672.contaboserver.net/cbt';
     // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
     const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
     return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
@@ -1084,7 +1084,7 @@ export const TestInterface: React.FC = () => {
   const getImageUrl = (url: string) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vmi2848672.contaboserver.net/cbt';
     // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
     const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
     return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
@@ -1357,7 +1357,7 @@ export const TestResults: React.FC = () => {
   const getImageUrl = (url: string) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vmi2848672.contaboserver.net/cbt';
     // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
     const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
     return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;

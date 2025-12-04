@@ -9,6 +9,12 @@
   force = true
 
 [[redirects]]
+  from = "/cbt/uploads/*"
+  to = "https://vmi2848672.contaboserver.net/cbt/uploads/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

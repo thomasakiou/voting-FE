@@ -451,7 +451,7 @@ export const AdminQuestions: React.FC = () => {
   const getImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vmi2848672.contaboserver.net/cbt';
     // Remove /cbt prefix from path if it exists
     const cleanPath = url.replace(/^\/?cbt\//, '');
     return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
