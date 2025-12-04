@@ -452,12 +452,9 @@ export const AdminQuestions: React.FC = () => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    // If baseUrl is set and path starts with /cbt/, remove /cbt/ to avoid duplication
-    // If baseUrl is empty (dev mode with proxy), keep the full path
-    if (baseUrl && url.startsWith('/cbt/')) {
-      return `${baseUrl}${url.substring(4)}`;
-    }
-    return baseUrl ? `${baseUrl}${url}` : url;
+    // Remove /cbt prefix from path if it exists
+    const cleanPath = url.replace(/^\/?cbt\//, '');
+    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
   };
 
   return (
