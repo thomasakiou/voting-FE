@@ -1080,6 +1080,16 @@ export const TestInterface: React.FC = () => {
   const currentQuestion = questions[currentQuestionIndex];
   const time = formatTime(timeRemaining);
 
+  // Helper to resolve image URL
+  const getImageUrl = (url: string) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
+    const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
+    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="grid lg:grid-cols-3 gap-8">
@@ -1098,9 +1108,14 @@ export const TestInterface: React.FC = () => {
             </p>
             {currentQuestion.question_image && (
               <img
-                src={currentQuestion.question_image}
+                src={getImageUrl(currentQuestion.question_image)}
                 alt="Question"
                 className="mt-4 max-w-full rounded-lg border border-slate-200"
+                onError={(e) => {
+                  console.error('Failed to load image:', currentQuestion.question_image);
+                  console.error('Attempted URL:', getImageUrl(currentQuestion.question_image));
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             )}
           </div>
@@ -1338,6 +1353,16 @@ export const TestResults: React.FC = () => {
   const wrongCount = result.total_questions - correctCount;
   const passed = result.passed;
 
+  // Helper to resolve image URL
+  const getImageUrl = (url: string) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    // Remove /cbt prefix from path if it exists (to avoid double /cbt/cbt/)
+    const cleanPath = url.startsWith('/cbt/') ? url.substring(4) : url;
+    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -1500,9 +1525,14 @@ export const TestResults: React.FC = () => {
                       <p>{answer.explanation}</p>
                       {answer.explanation_image && (
                         <img
-                          src={answer.explanation_image}
+                          src={getImageUrl(answer.explanation_image)}
                           alt="Explanation"
                           className="mt-3 max-w-full rounded-lg border border-slate-200"
+                          onError={(e) => {
+                            console.error('Failed to load explanation image:', answer.explanation_image);
+                            console.error('Attempted URL:', getImageUrl(answer.explanation_image));
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       )}
                     </div>
